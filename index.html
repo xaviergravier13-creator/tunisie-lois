@@ -3,30 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lois de la Tunisie - NationGlory</title>
+    <title>Lois de la Tunisie - Modération</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Crimson Text', serif; background: #121212; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; margin: 0; }
-        .scroll { background: #1e1e1e; padding: 40px; border-radius: 8px; width: 100%; max-width: 650px; border-top: 6px solid #E70013; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
+        .scroll { background: #1e1e1e; padding: 40px; border-radius: 8px; width: 100%; max-width: 650px; border-top: 6px solid #E70013; box-shadow: 0 15px 35px rgba(0,0,0,0.7); position: relative; }
         h1 { color: #E70013; text-align: center; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 15px; }
         ol { padding-left: 0; list-style-type: none; counter-reset: item; }
-        li { font-size: 1.3rem; margin-bottom: 20px; padding: 10px; border-bottom: 1px dashed #333; display: flex; justify-content: space-between; align-items: center; background: #252525; border-radius: 5px; }
+        li { font-size: 1.3rem; margin-bottom: 20px; padding: 15px; border-bottom: 1px dashed #333; display: flex; justify-content: space-between; align-items: center; background: #252525; border-radius: 5px; animation: fadeIn 0.5s; }
         li::before { content: counter(item) ". "; counter-increment: item; color: #E70013; font-weight: bold; margin-right: 15px; }
-        .text-loi { flex-grow: 1; }
-        .btn-delete { background: #444; color: #ff4444; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; transition: 0.3s; }
-        .btn-delete:hover { background: #ff4444; color: white; }
+        .btn-delete { display: none; background: #ff4444; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .input-area { margin-top: 40px; display: flex; gap: 15px; }
-        input { flex-grow: 1; padding: 15px; background: #2a2a2a; color: white; border: 1px solid #444; border-radius: 4px; font-size: 1rem; }
-        button#btnAjouter { background: #E70013; color: white; border: none; padding: 0 25px; cursor: pointer; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        input { flex-grow: 1; padding: 15px; background: #2a2a2a; color: white; border: 1px solid #444; border-radius: 4px; }
+        button { background: #E70013; color: white; border: none; padding: 10px 25px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        #adminBtn { position: absolute; top: 10px; right: 10px; background: transparent; color: #444; border: 1px solid #444; font-size: 0.7rem; padding: 5px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="scroll">
-    <h1>🇹🇺 Constitution de la Tunisie</h1>
+    <button id="adminBtn" onclick="activerModo()">Mode Modo</button>
+    <h1>🇹🇺 Lois de la Tunisie</h1>
     <ol id="liste-regles"></ol>
     <div class="input-area">
-        <input type="text" id="nouvelleRegle" placeholder="Nouvelle loi...">
+        <input type="text" id="nouvelleRegle" placeholder="Ajouter une loi...">
         <button id="btnAjouter">Publier</button>
     </div>
 </div>
@@ -49,7 +50,20 @@
   const db = getDatabase(app);
   const reglesRef = ref(db, 'regles');
 
-  // Ajouter
+  let modoActif = false;
+  const MdpModo = "Shayinn2013"; // <--- CHANGE TON MOT DE PASSE ICI
+
+  window.activerModo = () => {
+    const code = prompt("Entrez le code de modération :");
+    if(code === MdpModo) {
+        modoActif = !modoActif;
+        alert(modoActif ? "Mode Modérateur ACTIVÉ" : "Mode Modérateur DÉSACTIVÉ");
+        refreshList();
+    } else {
+        alert("Code incorrect !");
+    }
+  };
+
   document.getElementById('btnAjouter').onclick = () => {
     const val = document.getElementById('nouvelleRegle').value;
     if(val) {
@@ -58,23 +72,27 @@
     }
   };
 
-  // Afficher + Supprimer
-  onValue(reglesRef, (snapshot) => {
-    const liste = document.getElementById('liste-regles');
-    liste.innerHTML = "";
-    snapshot.forEach((child) => {
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="text-loi">${child.val().texte}</span>`;
-      
-      const btnDel = document.createElement('button');
-      btnDel.textContent = "Supprimer";
-      btnDel.className = "btn-delete";
-      btnDel.onclick = () => remove(ref(db, 'regles/' + child.key));
-      
-      li.appendChild(btnDel);
-      liste.appendChild(li);
-    });
-  });
+  function refreshList() {
+    onValue(reglesRef, (snapshot) => {
+      const liste = document.getElementById('liste-regles');
+      liste.innerHTML = "";
+      snapshot.forEach((child) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${child.val().texte}</span>`;
+        
+        const btnDel = document.createElement('button');
+        btnDel.textContent = "X";
+        btnDel.className = "btn-delete";
+        if(modoActif) btnDel.style.display = "block";
+        btnDel.onclick = () => remove(ref(db, 'regles/' + child.key));
+        
+        li.appendChild(btnDel);
+        liste.appendChild(li);
+      });
+    }, { onlyOnce: true });
+  }
+
+  onValue(reglesRef, () => refreshList());
 </script>
 </body>
 </html>
