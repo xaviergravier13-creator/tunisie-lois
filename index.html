@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lois de la Tunisie - NationGlory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Crimson Text', serif; 
+            background: #121212; 
+            color: #e0e0e0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 40px 20px; 
+            margin: 0;
+        }
+        .scroll { 
+            background: #1e1e1e; 
+            padding: 40px; 
+            border-radius: 8px; 
+            width: 100%; 
+            max-width: 650px; 
+            border-top: 6px solid #E70013; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7); 
+        }
+        h1 { 
+            color: #E70013; 
+            text-align: center; 
+            text-transform: uppercase; 
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+        }
+        ol { 
+            padding-left: 30px; 
+            counter-reset: item;
+            list-style-type: none;
+        }
+        li { 
+            font-size: 1.3rem; 
+            margin-bottom: 20px; 
+            padding-bottom: 10px; 
+            border-bottom: 1px dashed #333; 
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+        }
+        li::before {
+            content: counter(item) ". ";
+            counter-increment: item;
+            color: #E70013;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .input-area { 
+            margin-top: 40px; 
+            display: flex; 
+            gap: 15px; 
+        }
+        input { 
+            flex-grow: 1; 
+            padding: 15px; 
+            background: #2a2a2a; 
+            color: white; 
+            border: 1px solid #444; 
+            border-radius: 4px; 
+            font-size: 1rem; 
+            font-family: inherit;
+        }
+        button { 
+            background: #E70013; 
+            color: white; 
+            border: none; 
+            padding: 0 25px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        button:hover { 
+            background: #ff1a2e; 
+            box-shadow: 0 0 10px rgba(231, 0, 19, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div class="scroll">
+    <h1>🇹🇺 Constitution de la Tunisie</h1>
+    
+    <ol id="liste-regles">
+        </ol>
+
+    <div class="input-area">
+        <input type="text" id="nouvelleRegle" placeholder="Écrire une nouvelle loi impériale...">
+        <button id="btnAjouter">Publier</button>
+    </div>
+</div>
+
+<script type="module">
+  // Importation des modules Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  // Ta configuration que tu as trouvée
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYwgYVoG7zcbMGAh9mCWdWUlikqF8cjIE",
+    authDomain: "tunisieng-95ee6.firebaseapp.com",
+    databaseURL: "https://tunisieng-95ee6-default-rtdb.firebaseio.com",
+    projectId: "tunisieng-95ee6",
+    storageBucket: "tunisieng-95ee6.firebasestorage.app",
+    messagingSenderId: "187808132280",
+    appId: "1:187808132280:web:9b785b6f3f212172d5984d",
+    measurementId: "G-VMQ5SZ7Z9Z"
+  };
+
+  // Initialisation
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const reglesRef = ref(db, 'regles');
+
+  const input = document.getElementById('nouvelleRegle');
+  const btn = document.getElementById('btnAjouter');
+  const liste = document.getElementById('liste-regles');
+
+  // Fonction pour envoyer une règle
+  btn.onclick = () => {
+    const texte = input.value.trim();
+    if(texte !== "") {
+      push(reglesRef, { texte: texte });
+      input.value = "";
+    }
+  };
+
+  // Permet d'ajouter avec la touche "Entrée"
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") btn.click();
+  });
+
+  // Écoute en temps réel des changements pour tout le monde
+  onValue(reglesRef, (snapshot) => {
+    liste.innerHTML = ""; // Vide la liste
+    if (snapshot.exists()) {
+      snapshot.forEach((child) => {
+        const li = document.createElement('li');
+        li.textContent = child.val().texte;
+        liste.appendChild(li);
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
